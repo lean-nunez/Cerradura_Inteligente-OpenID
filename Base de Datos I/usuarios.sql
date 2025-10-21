@@ -13,3 +13,6 @@ CREATE TABLE usuarios (
   rfid_Uid VARCHAR(100) UNIQUE,                -- código único de la tarjeta RFID
   pin_Code INT                                 -- PIN personal del usuario
 ) ENGINE=InnoDB;
+
+insert into usuarios (Nombre, Apellido, Rol, rfid_Uid, pin_Code) values
+('Valeria Nieves', 'Villalba', 'Profesora', '0001', '0000');
