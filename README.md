@@ -1,14 +1,13 @@
 # 🔐 OpenID – Cerradura Inteligente
 
 ## 📚 Proyecto de 5to Año
-**OpenID** es un proyecto escolar de **automatización y ciberseguridad** en el que se desarrolla una **cerradura inteligente** capaz de reconocer **tarjetas RFID, tags NFC y comandos desde una app móvil**.  
+**OpenID** es un proyecto escolar de **automatización y ciberseguridad** en el que se desarrolla una **cerradura inteligente** capaz de reconocer **tarjetas RFID, tags NFC y en una futura version incluir comandos desde una app móvil**.  
 El objetivo es combinar hardware y software para crear un sistema de acceso **seguro, moderno y fácil de usar**.
 
 ---
 
 ## ⚙️ Funcionalidades Principales
 - 🪪 **Lectura RFID/NFC:** Desbloqueo mediante tarjetas o tags autorizados.  
-- 📱 **Control desde App:** Posibilidad de abrir o cerrar la cerradura desde el celular mediante conexión Bluetooth o Wi-Fi.  
 - 🔒 **Autenticación segura:** Gestión de usuarios registrados y control de accesos.  
 - 💾 **Base de datos MySQL:** Almacenamiento de usuarios, logs de acceso y tiempos de uso.  
 - 🔌 **Interacción con Arduino:** Comunicación serial entre el microcontrolador y la aplicación de escritorio.  
@@ -18,8 +17,8 @@ El objetivo es combinar hardware y software para crear un sistema de acceso **se
 ## 💡 Tecnologías Usadas
 | Tipo | Herramienta / Tecnología |
 |------|---------------------------|
-| Hardware | Arduino UNO / ESP32 |
-| Comunicación | Módulo RFID RC522, Bluetooth HC-05 / Wi-Fi |
+| Hardware | Arduino UNO|
+| Comunicación | Módulo RFID RC522,|
 | Base de Datos | MySQL |
 | Lenguaje | Python (con `customtkinter`) |
 | Interfaz | App con GUI moderna en modo oscuro |
@@ -59,7 +58,6 @@ Podés ver el prototipo interactivo en Tinkercad 👇
 ## 🚀 Estado del Proyecto
 📅 **Versión actual:** v1.0 (en desarrollo)  
 ⚙️ **Próximos pasos:**  
-- Integrar control por app móvil  
 - Mejorar interfaz visual  
 - Añadir cifrado de datos  
 - Testear seguridad y rendimiento  
@@ -69,7 +67,3 @@ Podés ver el prototipo interactivo en Tinkercad 👇
 ## 💬 Licencia
 Este proyecto se comparte con fines **educativos y experimentales**.  
 Todos los derechos reservados © 2025 — *Equipo OpenID.*
-
----
-
-### 🧠 “La seguridad no es un producto, es un proceso.” – Bruce Schneier
