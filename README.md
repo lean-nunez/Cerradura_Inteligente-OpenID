@@ -40,10 +40,10 @@ Podés ver el prototipo interactivo en Tinkercad 👇
 
 ---
 
-## 🧑‍💻 Equipo de Desarrollo
+## 🧑‍💻 Equipo:
 **Integrantes:**  
-- Nuñez  
-- Vigna  
+- Leandro Nuñez  
+- Santiago Vigna  
 - Machado  
 - Bautista  
 - Gómez  
