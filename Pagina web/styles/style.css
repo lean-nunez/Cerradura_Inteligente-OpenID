@@ -58,6 +58,42 @@ header .logo {
   box-shadow: 0 0 20px #00b7ff;
 }
 
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+.Traductor:active {
+  transform: translateY(2px);
+  transform: scale(0.85);
+  box-shadow: 0 0 15px #00aaff;
+}
+.Traductor {
+  transition: all 0.05s ease-out;
+  text-align: right;
+  position: absolute;
+  top: 30px;
+  right: 140px;
+  z-index: 10;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 20px #01b7ff;
+}
+
+div h4{
+  position: absolute;
+  top: 120px;
+  right: 20px;
+  color: #66d9ff;
+  text-shadow: 0 0 5px #008cff;
+}
+
 h1 {
   font-family: 'Orbitron', sans-serif;
   color: #66d9ff;

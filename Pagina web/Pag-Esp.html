@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open ID - Cerradura Inteligente</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="matrix-bg"></div>
+
+    <a href="C:\OpenID\OpenID\Pagina web\Pag-Ing.html"><img src="assets/images/traductor.png" alt="Traductor a Inglés" class="Traductor"> 
+    </a>
+    <div><h4>Traducir al Inglés / Traduces to English</h4> </div>
+    <header>
+        <img src="assets/images/logo.png" alt="Open ID Logo" class="logo">
+        <h1>🔐 Open ID - Cerradura Inteligente</h1>
+        <p>Proyecto de Robótica y Programación - 5to Año</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introducción</h2>
+            <p>
+                Nuestro proyecto busca optimizar la seguridad en sistemas de control de acceso mediante el uso de tecnología RFID (tarjeta o tag) y autenticación por PIN.
+                Sustituimos las llaves físicas por un sistema moderno y seguro que además puede integrarse con IoT y domótica.
+            </p>
+        </section>
+
+        <section>
+            <h2>Objetivo General</h2>
+            <p>Diseñar y desarrollar una cerradura inteligente que incremente la seguridad y comodidad de acceso a espacios físicos, integrando RFID, PIN y pantalla LCD.</p>
+        </section>
+
+        <section>
+            <h2>Objetivos Específicos</h2>
+            <ul>
+                <li>Implementar autenticación por tarjeta RFID</li>
+                <li>Agregar validación secundaria mediante código PIN</li>
+                <li>Mostrar información y estado del sistema en pantalla LCD</li>
+                <li>Optimizar seguridad y consumo energético</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Materiales</h2>
+            <ul>
+                <li>Arduino UNO</li>
+                <li>Módulo RFID RC522</li>
+                <li>Pantalla LCD 16x2</li>
+                <li>Servomotor</li>
+                <li>Buzzer y LEDs de estado</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Plan de Testing</h2>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Tipo de prueba</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>Lectura RFID</td></tr>
+                    <tr><td>2</td><td>Validación con PIN</td></tr>
+                    <tr><td>3</td><td>Intentos fallidos (bloqueo)</td></tr>
+                    <tr><td>4</td><td>Mensajes en LCD</td></tr>
+                    <tr><td>5</td><td>Activación de cerradura</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Probables Fallas</h2>
+            <ul>
+                <li>Fallo de lectura RFID por interferencias</li>
+                <li>Clonación de tarjetas RFID</li>
+                <li>Errores en la validación cruzada PIN + RFID</li>
+                <li>Consumo energético excesivo</li>
+                <li>Vulnerabilidades en almacenamiento de datos</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <h3>Creadores</h3>
+        <div class="buttons">
+            <a href="https://github.com/lean-nunez/Proa-" target="_blank" class="btn">Leandro Nuñez</a>
+            <a href="https://github.com/Santi-X/Santi-Proa" target="_blank" class="btn">Santiago Vigna</a>
+            <a href="https://github.com/MachyGit/PRoA/blob/main/README.md" target="_blank" class="btn">Santiago Machado</a>
+            <a href="https://github.com/Elios356/Especialidad_5" target="_blank" class="btn">Tiago Gómez</a>
+            <a href="https://github.com/maximosanti/maximo.git" target="_blank" class="btn">Máximo Bautista</a>
+        </div>
+        <p>© 2025 Open ID Project</p>
+    </footer>
+<script src="scripts/main.js"></script>
+</body>
+</html>

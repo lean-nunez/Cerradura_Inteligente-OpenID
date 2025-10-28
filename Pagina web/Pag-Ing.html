@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open ID - Smart Lock</title>
+    <link rel="stylesheet" href="styles/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="matrix-bg"></div>
+
+    <a href="C:\OpenID\OpenID\Pagina web\Pag-Esp.html" ><img src="assets/images/traductor.png" alt="Traductor a Inglés" class="Traductor">
+    </a>
+    <div> <h4>Traducir al Inglés / Traduces to English</h4> </div>
+    <header>
+        <img src="assets/images/logo.png" alt="Open ID Logo" class="logo">
+        <h1>🔐 Open ID - Smart Lock</h1>
+        <p>Proyect of Robotics and Programming from 5th grade students</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>Introduction</h2>
+            <p>
+                Our proyect seeks to optimize security in access control systems through RFID technology (card or tag) and PIN authentication.
+                 We replace physical keys with a modern and secure system that can also be integrated with IoT and home automation.
+            </p>
+        </section>
+
+        <section>
+            <h2>General Objective</h2>
+            <p>
+                Design and develop a smart lock that increases security and convenience of access to physical spaces, integrating RFID, PIN, and LCD screen.
+            </p>
+        </section>
+
+        <section>
+            <h2>Specific Objectives</h2>
+            <ul>
+                <li>
+                    Implement authentication via RFID card
+                </li>
+                <li>
+                    Add secondary validation through PIN code
+                </li>
+                <li>
+                    Show information and system status on LCD screen
+                </li>
+                <li>
+                    Optimize security and energy consumption
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Materials</h2>
+            <ul>
+                <li>Arduino ONE</li>
+                <li>RFID RC522 Module</li>
+                <li>16x2 LCD Screen</li>
+                <li>Servomotor</li>
+                <li>Buzzer and status LEDs</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Testing</h2>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Test type</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>RFID Reading</td></tr>
+                    <tr><td>2</td><td>PIN Validate</td></tr>
+                    <tr><td>3</td><td>Fails tests (Locks)</td></tr>
+                    <tr><td>4</td><td>LCD Messages</td></tr>
+                    <tr><td>5</td><td>Locks activation</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section>
+            <h2>Probable failures</h2>
+            <ul>
+                <li>RFID reading failure due to interferences
+                </li>
+                <li>Cloning of RFID cards
+                </li>
+                <li>Mistakes in cross-validation PIN + RFID
+                </li>
+                <li>Excesive energy consumption
+                </li>
+                <li>Vulnerabilities in data storage
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <h3>Creators</h3>
+        <div class="buttons">
+            <a href="https://github.com/lean-nunez/Proa-" target="_blank" class="btn">Leandro Nuñez</a>
+            <a href="https://github.com/Santi-X/Santi-Proa" target="_blank" class="btn">Santiago Vigna</a>
+            <a href="https://github.com/MachyGit/PRoA/blob/main/README.md" target="_blank" class="btn">Santiago Machado</a>
+            <a href="https://github.com/Elios356/Especialidad_5" target="_blank" class="btn">Tiago Gómez</a>
+            <a href="https://github.com/maximosanti/maximo.git" target="_blank" class="btn">Máximo Bautista</a>
+        </div>
+        <p>© 2025 Open ID Project</p>
+    </footer>
+<script src="scripts/main.js"></script>
+</body>
+</html>
