@@ -57,11 +57,13 @@ Podés ver el prototipo en Drive 👇
 
 ## 🚀 Estado del Proyecto
 📅 **Versión actual:** v1.0 (en desarrollo)  
-⚙️ **Próximos pasos:**  
+
+⚙️ **futuras Actualizaciones:**  
 - Mejorar interfaz visual  
 - Añadir cifrado de datos  
 - Testear seguridad y rendimiento
 - crear un bot que comunique el sistema de apertura y bloqueos de cerradura con el usuario
+  
 
 ---
 
