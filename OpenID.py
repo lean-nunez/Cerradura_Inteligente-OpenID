@@ -1,278 +1,277 @@
-dejaaa mejor saca el sonido de autodestruccion #include <SPI.h>
+#include <SPI.h>
 #include <MFRC522.h>
+#include <LiquidCrystal_I2C.h>
 #include <Servo.h>
 #include <avr/wdt.h>
 
 #define SS_PIN 10
 #define RST_PIN 9
-#define LED_G 5
-#define LED_R 4
-#define BUZZER 2
+
+// Pines LEDS
+#define LED_WHITE 3   // Led blanco → sistema funcionando
+#define LED_GREEN 2   // Led verde  → acceso permitido
+#define LED_RED   4   // Led rojo   → acceso denegado / alarma
+
+#define BUZZER 5
+#define SERVO_PIN 6
+
+// UID autorizada (TU TARJETA)
+#define AUTH_UID "4A 87 F9 04"
+
 MFRC522 mfrc522(SS_PIN, RST_PIN);
-Servo myServo;
+LiquidCrystal_I2C lcd(0x3F, 16, 2);
+Servo servo;
 
-#define DENIED_UID_1 " 01 02 03 04"
-#define AUTHORIZED_UID_1 " 4A 87 F9 04"
+// ESTADOS
+bool puertaCerrada = true;
 
-bool puertaCerrada = false;
-
-// Contadores y estados de alarma
 int failedCount = 0;
-bool alarmMode = false;       // true durante la cuenta regresiva
-bool alarmLocked = false;     // true cuando la alarma queda bloqueada y suena hasta tarjeta autorizada
+
+bool alarmMode = false;       // cuenta regresiva
+bool alarmLocked = false;     // alarma final
 unsigned long alarmStart = 0;
-const unsigned long countdownDuration = 5000UL; // 5 segundos de "secuencia de autodestrucción" (acortado)
 unsigned long lastToggle = 0;
 bool buzOn = false;
-const unsigned long buzIntervalFast = 120;   // intervalo para la secuencia rápida (ms)
-const unsigned long buzIntervalSlow = 400;   // intervalo para la alarma bloqueada (ms)
-const int SERVO_LOCK_POS = 0;    // posición fija del servo durante alarma
-const int SERVO_NORMAL_POS = 180; // posición "segura" por defecto
+
+const unsigned long countdownDuration = 5000; // 5 segundos
+const unsigned long buzFast = 120;
+const unsigned long buzSlow = 400;
 
 void reiniciarRFID() {
-  // Esta función reinicia el lector si se cuelga
   mfrc522.PCD_Reset();
+  delay(10);
   mfrc522.PCD_Init();
   delay(50);
 }
 
-void setup()
-{
-  wdt_enable(WDTO_2S); // reinicio automatico despues de 2 segundos si no se hace wdt_reset()
+void setup() {
+  wdt_enable(WDTO_2S); // watchdog
+
   Serial.begin(9600);
   SPI.begin();
   mfrc522.PCD_Init();
-  myServo.attach(3);
 
-  myServo.write(SERVO_NORMAL_POS);
+  lcd.init();
+  lcd.backlight();
 
-  pinMode(LED_G, OUTPUT);
-  pinMode(LED_R, OUTPUT);
+  servo.attach(SERVO_PIN);
+  servo.write(0); // puerta cerrada
+
+  pinMode(LED_WHITE, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_RED, OUTPUT);
   pinMode(BUZZER, OUTPUT);
 
-  Serial.println("Sistema Listo - Siempre Vigilante");
+  // sistema encendido
+  digitalWrite(LED_WHITE, HIGH);
+
+  lcd.clear();
+  lcd.print(" Access Control ");
+  lcd.setCursor(0, 1);
+  lcd.print("Scan Your Card>");
 }
 
-void loop()
-{
-  wdt_reset();  // "Patada" al watchdog → evita el reinicio
+void loop() {
+  wdt_reset();
 
-  // Si el lector no está respondiendo, lo reiniciamos
+  // Verificar lector congelado
   if (mfrc522.PCD_ReadRegister(mfrc522.VersionReg) == 0x00) {
     reiniciarRFID();
   }
 
-  // Siempre procesamos la lógica de alarma (no bloqueante) para poder leer tarjetas mientras suena
+  // Procesar alarma (no bloqueante)
   alarmTick();
 
-  if (!mfrc522.PICC_IsNewCardPresent()) {
-    // No hay tarjeta → continuar escuchando sin cortar el loop
-    return;
-  }
+  // Esperar tarjeta
+  if (!mfrc522.PICC_IsNewCardPresent()) return;
+  if (!mfrc522.PICC_ReadCardSerial()) return;
 
-  if (!mfrc522.PICC_ReadCardSerial()) {
-    // Fallo en lectura pero el programa sigue
-    return;
-  }
-
-  String content = "";
+  // Obtener UID
+  String uid = "";
   for (byte i = 0; i < mfrc522.uid.size; i++) {
-    content.concat(mfrc522.uid.uidByte[i] < 0x10 ? " 0" : " ");
-    content.concat(String(mfrc522.uid.uidByte[i], HEX));
+    if (mfrc522.uid.uidByte[i] < 0x10) uid += "0";
+    uid += String(mfrc522.uid.uidByte[i], HEX);
+    if (i < mfrc522.uid.size - 1) uid += " ";
   }
-  content.toUpperCase();
+  uid.toUpperCase();
 
-  Serial.print("UID Detectado: ");
-  Serial.println(content);
+  Serial.print("UID detectado: ");
+  Serial.println(uid);
 
-  // Si estamos en modo alarma bloqueada y aparece la tarjeta autorizada -> apagar alarma
+  lcd.clear();
+  lcd.print("Leyendo UID...");
+  delay(300);
+
+  // *** TARJETA PARA APAGAR LA ALARMA ***
   if (alarmMode || alarmLocked) {
-    if (content == AUTHORIZED_UID_1) {
-      detenerAlarmaPorTarjetaAutorizada();
-      // también actuamos como acceso autorizado normal (toggle puerta)
-      digitalWrite(LED_G, HIGH);
-      tone(BUZZER, 1200); delay(120);
-      tone(BUZZER, 1000); delay(120);
-      noTone(BUZZER);
-      digitalWrite(LED_G, LOW);
-
-      if (puertaCerrada) {
-        myServo.write(SERVO_NORMAL_POS);
-        puertaCerrada = false;
-        Serial.println("Puerta ABIERTA.");
-      } else {
-        myServo.write(SERVO_LOCK_POS == 0 ? 0 : SERVO_LOCK_POS); // no cambiar si prefieres
-        puertaCerrada = true;
-        Serial.println("Puerta CERRADA.");
-      }
-
-      mfrc522.PICC_HaltA();
-      mfrc522.PCD_StopCrypto1();
-      return;
+    if (uid == AUTH_UID) {
+      detenerAlarma();
+      accesoPermitido();
     } else {
-      // En modo alarma bloqueada, cualquier otra tarjeta no hace nada (silencio no se restablece)
-      Serial.println("Alarma activa. Solo tarjeta autorizada apaga la alarma.");
-      mfrc522.PICC_HaltA();
-      mfrc522.PCD_StopCrypto1();
-      return;
+      lcd.clear();
+      lcd.print("ALARMA ACTIVA");
+      lcd.setCursor(0, 1);
+      lcd.print("Solo tarjeta OK");
+      delay(1200);
     }
+    mfrc522.PICC_HaltA();
+    return;
   }
 
-  // TARJETA AUTORIZADA (modo normal)
-  if (content == AUTHORIZED_UID_1) {
-
-    digitalWrite(LED_G, HIGH);
-    tone(BUZZER, 1200); delay(120);
-    tone(BUZZER, 1000); delay(120);
-    noTone(BUZZER);
-    digitalWrite(LED_G, LOW);
-
-    // resetear contador de fallos
+  // *** TARJETA AUTORIZADA ***
+  if (uid == AUTH_UID) {
+    accesoPermitido();
     failedCount = 0;
+  }
 
-    if (puertaCerrada) {
-      myServo.write(SERVO_NORMAL_POS);
-      puertaCerrada = false;
-      Serial.println("Puerta ABIERTA.");
-    } else {
-      myServo.write(0);
-      puertaCerrada = true;
-      Serial.println("Puerta CERRADA.");
-    }
+  else {
+    // *** TARJETA DENEGADA ***
+    accesoDenegado();
 
-  } else {
-    // TARJETA DENEGADA
     failedCount++;
-    digitalWrite(LED_R, HIGH);
-    tone(BUZZER, 600); delay(350);
-    noTone(BUZZER);
-    digitalWrite(LED_R, LOW);
 
-    Serial.print("ACCESO DENEGADO. Intentos fallidos: ");
-    Serial.println(failedCount);
-
-    // Si hay 3 intentos fallidos, iniciar secuencia de "autodestrucción"
-    if (failedCount >= 3 && !alarmMode && !alarmLocked) {
-      iniciarSecuenciaAutodestruccion();
+    if (failedCount >= 3 && !alarmMode) {
+      iniciarCuentaRegresiva();
     }
   }
 
-  // Limpia la tarjeta de la memoria
   mfrc522.PICC_HaltA();
-  mfrc522.PCD_StopCrypto1();
 }
 
-// Inicia la secuencia (cuenta regresiva) que luego deja la alarma bloqueada
-void iniciarSecuenciaAutodestruccion() {
+// ============================================================
+// FUNCIONES DE ACCESO
+// ============================================================
+
+void accesoPermitido() {
+  lcd.clear();
+  lcd.print("Acceso Permitido");
+
+  digitalWrite(LED_GREEN, HIGH);
+  tone(BUZZER, 2000);
+  delay(100);
+  noTone(BUZZER);
+  delay(80);
+  digitalWrite(LED_GREEN, LOW);
+
+  if (puertaCerrada) {
+    servo.write(100);
+    puertaCerrada = false;
+  } else {
+    servo.write(0);
+    puertaCerrada = true;
+  }
+
+  delay(1000);
+
+  lcd.clear();
+  lcd.print("Scan Your Card>");
+}
+
+void accesoDenegado() {
+  lcd.clear();
+  lcd.print("Acceso Denegado");
+
+  digitalWrite(LED_RED, HIGH);
+  tone(BUZZER, 1500);
+  delay(120);          // pitidos más cortos
+  noTone(BUZZER);
+  digitalWrite(LED_RED, LOW);
+
+  delay(800);
+  lcd.clear();
+  lcd.print("Scan Your Card>");
+}
+
+// ============================================================
+// ALARMA A — CUENTA REGRESIVA + ALARMA BLOQUEADA
+// ============================================================
+
+void iniciarCuentaRegresiva() {
   alarmMode = true;
   alarmLocked = false;
   alarmStart = millis();
   lastToggle = 0;
   buzOn = false;
-  // Poner servo en posición fija de bloqueo desde el inicio
-  myServo.write(SERVO_LOCK_POS);
-  Serial.println(">>> SECUENCIA DE AUTODESTRUCCION INICIADA <<<");
+
+  servo.write(0); // bloquear
+
+  Serial.println(">> INICIANDO CUENTA REGRESIVA <<");
+
+  lcd.clear();
+  lcd.print("ALARMA EN 5s");
 }
 
-// Rutina no bloqueante que maneja la cuenta regresiva + alarma bloqueada
 void alarmTick() {
   if (!alarmMode && !alarmLocked) return;
 
   unsigned long now = millis();
 
-  // DURANTE LA CUENTA REGRESIVA: efectos rápidos, parpadeo LED y zumbidos rápidos
+  // CUENTA REGRESIVA
   if (alarmMode && !alarmLocked) {
+
     unsigned long elapsed = now - alarmStart;
-    if (now - lastToggle >= buzIntervalFast) {
+
+    if (now - lastToggle >= buzFast) {
       lastToggle = now;
-      if (buzOn) {
-        noTone(BUZZER);
-        digitalWrite(LED_R, LOW);
-        buzOn = false;
-      } else {
-        tone(BUZZER, 1500);
-        digitalWrite(LED_R, HIGH);
-        buzOn = true;
-      }
-      // Servo ya quedó fijo en iniciarSecuenciaAutodestruccion()
+      buzOn = !buzOn;
+      digitalWrite(LED_RED, buzOn);
+      if (buzOn) tone(BUZZER, 2000);
+      else noTone(BUZZER);
     }
 
-    // Mostrar tiempo restante en serial cada segundo (opcional)
-    static unsigned long lastMsg = 0;
-    if (now - lastMsg >= 1000) {
-      lastMsg = now;
-      unsigned long remaining = (elapsed >= countdownDuration) ? 0 : (countdownDuration - elapsed) / 1000;
-      Serial.print("Cuenta regresiva: ");
-      Serial.print(remaining);
-      Serial.println(" s");
-    }
-
-    // Cuando termina la cuenta regresiva -> pasar a alarma bloqueada
     if (elapsed >= countdownDuration) {
-      alarmLocked = true;
+      // PASA A ALARMA BLOQUEADA
       alarmMode = false;
+      alarmLocked = true;
       noTone(BUZZER);
-      digitalWrite(LED_R, LOW);
-      buzOn = false;
-      delay(100);
-      Serial.println(">>> ALARMA BLOQUEADA. Solo tarjeta autorizada la apaga. <<<");
-      // Aseguramos servo en posición de bloqueo
-      myServo.write(SERVO_LOCK_POS);
+      digitalWrite(LED_RED, LOW);
+      lcd.clear();
+      lcd.print("ALARMA ACTIVADA");
+      Serial.println(">> ALARMA BLOQUEADA <<");
+      delay(500);
     }
-
     return;
   }
 
-  // MODO ALARMA BLOQUEADA: patrón intermitente más lento y persistente; servo queda fijo
+  // ALARMA BLOQUEADA
   if (alarmLocked) {
-    if (now - lastToggle >= buzIntervalSlow) {
+    if (now - lastToggle >= buzSlow) {
       lastToggle = now;
-      if (buzOn) {
-        noTone(BUZZER);
-        digitalWrite(LED_R, LOW);
-        buzOn = false;
-      } else {
-        tone(BUZZER, 900);
-        digitalWrite(LED_R, HIGH);
-        buzOn = true;
-      }
-      // Mantener servo en posición de "bloqueo"
-      myServo.write(SERVO_LOCK_POS);
+      buzOn = !buzOn;
+      digitalWrite(LED_RED, buzOn);
+      if (buzOn) tone(BUZZER, 900);
+      else noTone(BUZZER);
     }
+    servo.write(0);
   }
 }
 
-// Si aparece la tarjeta autorizada mientras hay alarma, la apagamos y reproducimos el "apagado de alarma de auto"
-void detenerAlarmaPorTarjetaAutorizada() {
+void detenerAlarma() {
   alarmMode = false;
   alarmLocked = false;
   failedCount = 0;
+
   noTone(BUZZER);
-  digitalWrite(LED_R, LOW);
-  Serial.println("Alarma apagada por tarjeta autorizada. Reproduciendo sonido de apagado...");
+  digitalWrite(LED_RED, LOW);
 
-  // Secuencia tipo "alarma de auto apagándose" - tonos descendentes cortos
-  playCarAlarmShutdown();
+  lcd.clear();
+  lcd.print("ALARMA APAGADA");
 
-  // Volver servo a posición normal (segura)
-  myServo.write(SERVO_NORMAL_POS);
-  Serial.println("Sistema normal.");
-}
-
-// Secuencia de apagado de alarma (puede ser bloqueante; es corta)
-void playCarAlarmShutdown() {
-  // ejemplo: varios tonos descendentes rápidos
-  int tones[] = {1200, 1000, 850, 700, 550, 400};
-  int n = sizeof(tones) / sizeof(tones[0]);
-  for (int i = 0; i < n; i++) {
-    tone(BUZZER, tones[i]);
-    digitalWrite(LED_G, HIGH); // pequeño indicador
-    delay(100);
+  // efecto “apagado de alarma”
+  int tones[] = {1200, 1000, 800, 600, 400};
+  for (int t : tones) {
+    tone(BUZZER, t);
+    digitalWrite(LED_GREEN, HIGH);
+    delay(80);
     noTone(BUZZER);
-    digitalWrite(LED_G, LOW);
-    delay(60);
+    digitalWrite(LED_GREEN, LOW);
+    delay(50);
   }
-  // un último "silencio" para cerrar
-  noTone(BUZZER);
-  digitalWrite(LED_G, LOW);
+
+  servo.write(100);
+  puertaCerrada = false;
+
+  delay(700);
+  lcd.clear();
+  lcd.print("Scan Your Card>");
 }
