@@ -1,7 +1,7 @@
 # 🔐 OpenID – Cerradura Inteligente
 
 ## 📚 Proyecto de 5to Año
-**OpenID** es un proyecto escolar de **automatización y ciberseguridad** en el que se desarrolla una **cerradura inteligente** capaz de reconocer **tarjetas RFID, tags NFC y en una futura version incluir comandos desde una app móvil**.  
+**Open-ID** es un proyecto escolar de **automatización y ciberseguridad** en el que se desarrolla una **cerradura inteligente** capaz de reconocer **tarjetas RFID, tags NFC y en una futura version incluir comandos desde una app móvil**.  
 El objetivo es combinar hardware y software para crear un sistema de acceso **seguro, moderno y fácil de usar**.
 
 ---
@@ -10,7 +10,8 @@ El objetivo es combinar hardware y software para crear un sistema de acceso **se
 - 🪪 **Lectura RFID/NFC:** Desbloqueo mediante tarjetas o tags autorizados.  
 - 🔒 **Autenticación segura:** Gestión de usuarios registrados y control de accesos.  
 - 💾 **Base de datos MySQL:** Almacenamiento de usuarios, logs de acceso y tiempos de uso.  
-- 🔌 **Interacción con Arduino:** Comunicación serial entre el microcontrolador y la aplicación de escritorio.  
+- 🔌 **Interacción con Arduino:** Comunicación serial entre el microcontrolador y la aplicación de escritorio.
+- 🚨  **Alarma integrada:** despues de erorres en autenticacion comienza a sonar una alarma 
 
 ---
 
@@ -21,12 +22,12 @@ El objetivo es combinar hardware y software para crear un sistema de acceso **se
 | Comunicación | Módulo RFID RC522,|
 | Base de Datos | MySQL |
 | Lenguaje | Python (con `customtkinter`) |
-| Interfaz | App con GUI moderna en modo oscuro |
-| Control de versión | GitHub |
+| Interfaz | App con GUI en modo oscuro |
+| Controlador de versión | GitHub |
 
 ---
 
-## 🧠 Objetivos del Proyecto
+## 🧠 Objetivo del Proyecto
 - Aplicar conocimientos de **programación, electrónica y redes**.  
 - Desarrollar una **solución funcional** con enfoque en **seguridad digital**.  
 - Promover el trabajo en **equipo interdisciplinario**.  
@@ -35,8 +36,8 @@ El objetivo es combinar hardware y software para crear un sistema de acceso **se
 ---
 
 ## 🧩 Diseño del Circuito
-Podés ver el prototipo interactivo en Tinkercad 👇  
-👉 [**Ver circuito en Tinkercad**](https://www.tinkercad.com/things/9xxOIFpK1RH-xd/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=3uP6pUaS5BS1Q9yqr-Btp9lh4ap0SQRciD5XlwowWCs)
+Podés ver el prototipo en Drive 👇  
+👉 [**Ver circuito en Drive**](https://drive.google.com/file/d/1PqM3AL_zs84CiUn4DvpY6xL2ULtEnYsv/view?usp=sharing)
 
 ---
 
@@ -45,7 +46,6 @@ Podés ver el prototipo interactivo en Tinkercad 👇
 - Leandro Nuñez  
 - Santiago Vigna  
 - Machado  
-- Bautista  
 - Gómez  
 
 ---
@@ -60,10 +60,11 @@ Podés ver el prototipo interactivo en Tinkercad 👇
 ⚙️ **Próximos pasos:**  
 - Mejorar interfaz visual  
 - Añadir cifrado de datos  
-- Testear seguridad y rendimiento  
+- Testear seguridad y rendimiento
+- crear un bot que comunique el sistema de apertura y bloqueos de cerradura con el usuario
 
 ---
 
 ## 💬 Licencia
-Este proyecto se comparte con fines **educativos y experimentales**.  
+Este proyecto se comparte con fines **`ducativos y experimentales**.  
 Todos los derechos reservados © 2025 — *Equipo OpenID.*
