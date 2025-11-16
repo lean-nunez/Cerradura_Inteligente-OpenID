@@ -233,26 +233,26 @@ log_box.pack(padx=10, pady=10)
 # ANIMACIÓN HACKER
 # ============================================================
 hacker_lines = [
-    "[CORE] Initializing security kernel...",
-    "[AUTH] Checking encrypted credentials...",
-    "[DB] Syncing user table...",
-    "[RFID] Waiting for card...",
-    "[SYS] Running watchdog thread...",
-    "[NET] Opening secure tunnel...",
-    "[LOG] Updating timestamp...",
-    "[ACCESS] Ready...",
-    "[AI] Predictive model loaded...",
+    "[CORE] Iniciando seguridad de kernel...",
+    "[AUTH] Checkeando la encriptacion de credenciales...",
+    "[DB] leyende user de la tabla...",
+    "[RFID] Esperando la Tarjeta o Tag...",
+    "[SYS] Arrancando watchdog ...",
+    "[NET] abriendo sistema de seguridad...",
+    "[LOG] Actualizando registro temporal...",
+    "[ACCESS] preparando...",
+    "[AI] cargando modelo predictor...",
     "[SYS] IDLE",
-    "[RFID] Card listener active...",
+    "[RFID] lector de tarjetas activo...",
     "[SYS] Heatbeat OK",
-    "[WATCH] System integrity OK",
-    "[FIREWALL] Rules updated",
-    "[SYS] Cache refreshed",
-    "[SESSION] Validating token...",
-    "[ENC] AES-256 Initialized",
-    "[KERNEL] No anomalies detected",
-    "[DB] Handshake successful",
-    "[SYS] Listening..."
+    "[WATCH] Sistema integral OK",
+    "[FIREWALL] Actualizacion de reglas",
+    "[SYS] Cache refrescado",
+    "[SESSION] Validando token...",
+    "[ENC] AES-256 Iniciado",
+    "[KERNEL] sin detectar anomalias",
+    "[DB] Handshake correcto",
+    "[SYS] Listo..."
 ]
 
 def animacion_hacker():
@@ -328,11 +328,6 @@ def click_agregar_usuario():
 btn_add_user = ctk.CTkButton(tab_usuarios, text="AGREGAR USUARIO", command=click_agregar_usuario)
 btn_add_user.pack(pady=10)
 
-
-# ============================================================
-# PARTE 1 TERMINADA
-# ============================================================
-# SIGUE LA PARTE 2 — NO EJECUTES TODAVÍA
 # ============================================================
 # TAB USUARIOS — LISTA DE USUARIOS (CONSULTA)
 # ============================================================
@@ -526,3 +521,4 @@ ping_serial()
 # LOOP PRINCIPAL
 # ============================================================
 app.mainloop()
+
