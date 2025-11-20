@@ -1,69 +1,68 @@
-# 🔐 OpenID – Cerradura Inteligente
+# 🔐 **OpenID – Sistema de Cerradura Inteligente**
 
-## 📚 Proyecto de 5to Año
-**OpenID** es un proyecto escolar de **automatización y ciberseguridad** en el que se desarrolla una **cerradura inteligente** capaz de reconocer **tarjetas RFID, tags NFC y en una futura version incluir comandos desde una app móvil**.  
-El objetivo es combinar hardware y software para crear un sistema de acceso **seguro, moderno y fácil de usar**.
-
----
-
-## ⚙️ Funcionalidades Principales
-- 🪪 **Lectura RFID/NFC:** Desbloqueo mediante tarjetas o tags autorizados.  
-- 🔒 **Autenticación segura:** Gestión de usuarios registrados y control de accesos.  
-- 💾 **Base de datos MySQL:** Almacenamiento de usuarios, logs de acceso y tiempos de uso.  
-- 🔌 **Interacción con Arduino:** Comunicación serial entre el microcontrolador y la aplicación de escritorio.  
+## 📘 Descripción del Proyecto
+**OpenID** es un sistema de cerradura inteligente desarrollado como proyecto final de **5.º año**, orientado a la **automatización, programación y ciberseguridad**.  
+El proyecto integra hardware y software para ofrecer un mecanismo de acceso **seguro, confiable y escalable**, utilizando tecnologías **RFID/NFC**, bases de datos y una aplicación de escritorio.
 
 ---
 
-## 💡 Tecnologías Usadas
-| Tipo | Herramienta / Tecnología |
-|------|---------------------------|
-| Hardware | Arduino UNO|
-| Comunicación | Módulo RFID RC522,|
+## ⚙️ Características Principales
+- 🪪 **Autenticación RFID/NFC:** Acceso mediante tarjetas o tags registrados.  
+- 🔐 **Control de privilegios:**  
+  - **Administrador:** Puede **agregar usuarios, eliminarlos y consultar todos los registros de acceso**.  
+  - **Usuario estándar:** Solo puede **visualizar los accesos asociados a la cerradura**, sin permisos de gestión.  
+- 📂 **Registro de accesos:** Cada evento es almacenado en **MySQL**, permitiendo trazabilidad y auditoría completa.  
+- 🔌 **Interacción con Arduino:** Comunicación serial con **Arduino UNO**, que controla el mecanismo físico de la cerradura.  
+- 🚨 **Sistema de alarma:** Se activa tras múltiples intentos fallidos de autenticación.
+
+---
+
+## 🧰 Tecnologías Utilizadas
+| 🧩 Categoría | 🛠️ Herramientas |
+|--------------|------------------|
+| Hardware | Arduino UNO |
+| Lector | Módulo RFID RC522 |
 | Base de Datos | MySQL |
-| Lenguaje | Python (con `customtkinter`) |
-| Interfaz | App con GUI moderna en modo oscuro |
-| Control de versión | GitHub |
+| Lenguaje | Python |
+| Librerías | `customtkinter` |
+| Interfaz | GUI en modo oscuro |
+| Control de versiones | GitHub |
 
 ---
 
-## 🧠 Objetivos del Proyecto
-- Aplicar conocimientos de **programación, electrónica y redes**.  
-- Desarrollar una **solución funcional** con enfoque en **seguridad digital**.  
-- Promover el trabajo en **equipo interdisciplinario**.  
-- Integrar **hardware + software + IoT** en un sistema práctico.
+## 🎯 Objetivos Técnicos
+- Integrar conocimientos de **electrónica, programación y redes**.  
+- Desarrollar un sistema funcional combinando **hardware + software + base de datos**.  
+- Implementar buenas prácticas de documentación, arquitectura y seguridad.  
+- Preparar el sistema para futuras ampliaciones como **aplicaciones móviles e IoT**.
 
 ---
 
-## 🧩 Diseño del Circuito
-Podés ver el prototipo interactivo en Tinkercad 👇  
-👉 [**Ver circuito en Tinkercad**](https://www.tinkercad.com/things/9xxOIFpK1RH-xd/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard%2Fdesigns%2Fcircuits&sharecode=3uP6pUaS5BS1Q9yqr-Btp9lh4ap0SQRciD5XlwowWCs)
+## 🧩 Diseño del Sistema
+El diseño del circuito y el prototipo pueden visualizarse en el siguiente enlace:  
+👉 **Circuito en Drive** *(enlace proporcionado por el autor)*
 
 ---
 
-## 🧑‍💻 Equipo:
-**Integrantes:**  
+## 👥 Equipo de Desarrollo
 - Leandro Nuñez  
 - Santiago Vigna  
 - Machado  
-- Bautista  
 - Gómez  
 
 ---
 
-## 🖼️ Logo del Proyecto
-<img width="200" height="200" alt="OpenID Logo" src="https://github.com/user-attachments/assets/04739158-2bc8-4875-90eb-56c33e0d1a63" />
+## 🚀 Estado Actual del Proyecto
+📌 **Versión:** v1.0 (en desarrollo)
+
+### 🔧 Próximas Mejoras
+- Mejora del diseño visual de la interfaz.  
+- Implementación de cifrado en la base de datos.  
+- Pruebas de seguridad y rendimiento.  
+- Bot de notificaciones sobre aperturas, bloqueos e intentos fallidos.
 
 ---
 
-## 🚀 Estado del Proyecto
-📅 **Versión actual:** v1.0 (en desarrollo)  
-⚙️ **Próximos pasos:**  
-- Mejorar interfaz visual  
-- Añadir cifrado de datos  
-- Testear seguridad y rendimiento  
-
----
-
-## 💬 Licencia
-Este proyecto se comparte con fines **educativos y experimentales**.  
+## 📜 Licencia
+Proyecto desarrollado con fines **educativos y experimentales**.  
 Todos los derechos reservados © 2025 — *Equipo OpenID.*

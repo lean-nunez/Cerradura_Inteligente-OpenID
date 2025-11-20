@@ -1,35 +1,33 @@
 import mysql.connector
+from datetime import datetime
 
-# Configuración de la conexión
-config = {
-    'host': 'localhost',        # o la IP del servidor de MySQL
-    'user': 'root',             # tu usuario de MySQL
-    'password': 'root',         # tu contraseña
-    'database': 'abrir_cerradura'  # la base de datos que creaste
-}
+def get_db_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="root",
+        database="abrir_cerradura"
+    )
 
-try:
-    # Crear la conexión
-    conexion = mysql.connector.connect(**config)
 
-    if conexion.is_connected():
-        print("¡Conexión exitosa a la base de datos!")
+def registrar_acceso(id_usuario, estado):
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
 
-        # Crear un cursor para ejecutar consultas
-        cursor = conexion.cursor()
+        # Guarda fecha/hora exacta con Python
+        ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        # Verificar las tablas existentes
-        cursor.execute("SHOW TABLES")
-        tablas = cursor.fetchall()
-        print("Tablas en la base de datos:")
-        for tabla in tablas:
-            print(tabla[0])
+        cursor.execute("""
+            INSERT INTO registro_acesso (ID_usuarios, Estado, Fecha_hora)
+            VALUES (%s, %s, %s)
+        """, (id_usuario, estado, ahora))
 
-except mysql.connector.Error as e:
-    print("Error al conectar a MySQL:", e)
-
-finally:
-    if 'conexion' in locals() and conexion.is_connected():
+        db.commit()
         cursor.close()
-        conexion.close()
-        print("Conexión cerrada.")
+        db.close()
+        return True
+
+    except Exception as e:
+        print("Error al registrar acceso:", e)
+        return False

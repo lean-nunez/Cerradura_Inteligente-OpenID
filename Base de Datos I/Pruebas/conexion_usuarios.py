@@ -1,35 +1,44 @@
 import mysql.connector
 
-# Configuración de la conexión
-config = {
-    'host': 'localhost',        # o la IP del servidor de MySQL
-    'user': 'root',             # tu usuario de MySQL
-    'password': 'root',         # tu contraseña
-    'database': 'abrir_cerradura'  # la base de datos que creaste
-}
+def get_db_connection():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="root",
+        database="abrir_cerradura"
+    )
 
-try:
-    # Crear la conexión
-    conexion = mysql.connector.connect(**config)
+def agregar_usuario(nombre, apellido, rol, rfid_uid, pin_code):
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
 
-    if conexion.is_connected():
-        print("¡Conexión exitosa a la base de datos!")
+        cursor.execute("""
+            INSERT INTO usuarios (Nombre, Apellido, Rol, rfid_Uid, pin_Code)
+            VALUES (%s, %s, %s, %s, %s)
+        """, (nombre, apellido, rol, rfid_uid, pin_code))
 
-        # Crear un cursor para ejecutar consultas
-        cursor = conexion.cursor()
-
-        # Verificar las tablas existentes
-        cursor.execute("SHOW TABLES")
-        tablas = cursor.fetchall()
-        print("Tablas en la base de datos:")
-        for tabla in tablas:
-            print(tabla[0])
-
-except mysql.connector.Error as e:
-    print("Error al conectar a MySQL:", e)
-
-finally:
-    if 'conexion' in locals() and conexion.is_connected():
+        db.commit()
         cursor.close()
-        conexion.close()
-        print("Conexión cerrada.")
+        db.close()
+        return True
+
+    except Exception as e:
+        print("Error al agregar usuario:", e)
+        return False
+
+
+def existe_uid(rfid_uid):
+    try:
+        db = get_db_connection()
+        cursor = db.cursor()
+        cursor.execute("SELECT ID_usuarios FROM usuarios WHERE rfid_Uid = %s", (rfid_uid,))
+        data = cursor.fetchone()
+        cursor.close()
+        db.close()
+
+        return data is not None
+
+    except Exception as e:
+        print("Error verificando UID:", e)
+        return False
