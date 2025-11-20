@@ -1,524 +1,398 @@
 import customtkinter as ctk
-import serial
-import mysql.connector
-from datetime import datetime
-from PIL import Image, ImageTk
-import threading
-import random
-import time
-import os
+from tkinter import messagebox
+from PIL import Image, ImageTk  # <--- Importado para el logo
+from conexion_usuarios import (
+    obtener_todos_usuarios,
+    agregar_usuario,
+    eliminar_usuario,
+    # Se quita obtener_registros de aquí
+)
+from Conexion_registro_accesos import (
+    obtener_registros,
+)
 
-from conexion_usuarios import agregar_usuario, existe_uid
-from conexion_registros_accesos import registrar_acceso
-
-
-# ============================================================
-# CONFIGURACIÓN DE LA INTERFAZ
-# ============================================================
-ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
-
-FUENTE = ("Consolas", 13)
-
-# ============================================================
-# SERIAL ARDUINO
-# ============================================================
-def conectar_serial():
-    puertos = ["COM3", "COM4", "COM5", "COM6"]
-    for p in puertos:
-        try:
-            return serial.Serial(p, 9600, timeout=1)
-        except:
-            pass
-    return None
-
-arduino = conectar_serial()
+ADMIN_USER = "Admin"
+ADMIN_PASS = "Admin-id"
 
 
-# ============================================================
-# APP PRINCIPAL
-# ============================================================
-app = ctk.CTk()
-app.title("Cerradura Inteligente - Panel de Control")
-app.geometry("1000x650")
-app.resizable(False, False)
+# =======================
+#         LOGIN
+# =======================
 
-tema_actual = "dark"
-modo_admin = False
-animacion_activa = True
+class LoginWindow(ctk.CTk):
+    def __init__(self):
+        super().__init__()
 
-# ============================================================
-# FONDO ANIMADO
-# ============================================================
-canvas = ctk.CTkCanvas(app, width=1000, height=650, highlightthickness=0)
-canvas.place(x=0, y=0)
-
-try:
-    fondo_path = r"C:\Users\ALUMNO\Downloads\Purple Pink Black Fingerprint Padlock Cyber Security Logo.png"
-    fondo_base = Image.open(fondo_path).resize((1000, 650))
-    fondo_tk = ImageTk.PhotoImage(fondo_base)
-
-    fondo_w = fondo_base.width
-    fondo_x = 0
-
-    bg1 = canvas.create_image(0, 0, anchor="nw", image=fondo_tk)
-    bg2 = canvas.create_image(fondo_w, 0, anchor="nw", image=fondo_tk)
-except:
-    fondo_tk = None
-
-
-def mover_fondo():
-    global fondo_x
-    if fondo_tk:
-        fondo_x -= 1
-
-        canvas.coords(bg1, fondo_x, 0)
-        canvas.coords(bg2, fondo_x + fondo_w, 0)
-
-        if fondo_x <= -fondo_w:
-            fondo_x = 0
-
-    app.after(25, mover_fondo)
-
-
-# ============================================================
-# TOAST (NOTIFICACIONES)
-# ============================================================
-def toast(msg, color="green"):
-    win = ctk.CTkToplevel(app)
-    win.overrideredirect(True)
-    win.geometry("300x60+20+20")
-
-    frame_t = ctk.CTkFrame(win, fg_color=color)
-    frame_t.place(relwidth=1, relheight=1)
-
-    lbl = ctk.CTkLabel(frame_t, text=msg, font=("Consolas", 14), text_color="white")
-    lbl.pack(expand=True)
-
-    def auto_close():
-        time.sleep(2)
-        try:
-            win.destroy()
-        except:
-            pass
-
-    threading.Thread(target=auto_close, daemon=True).start()
-
-
-# ============================================================
-# FRAME PRINCIPAL
-# ============================================================
-frame = ctk.CTkFrame(app, corner_radius=15, width=850, height=580)
-frame.place(relx=0.5, rely=0.53, anchor="center")
-
-# ============================================================
-# LOGO
-# ============================================================
-try:
-    logo_img = ctk.CTkImage(light_image=Image.open(fondo_path), size=(100, 100))
-    lbl_logo = ctk.CTkLabel(frame, image=logo_img, text="")
-    lbl_logo.pack(pady=5)
-except:
-    lbl_logo = ctk.CTkLabel(frame, text="🔐", font=("Consolas", 40))
-    lbl_logo.pack()
-
-# ============================================================
-# TÍTULO
-# ============================================================
-lbl_titulo = ctk.CTkLabel(frame, text="Sistema de Acceso RFID", font=("Consolas", 24, "bold"))
-lbl_titulo.pack(pady=5)
-
-# ============================================================
-# SE PARTE EN PANELES — PANEL SUPERIOR (Botones)
-# ============================================================
-panel_superior = ctk.CTkFrame(frame)
-panel_superior.pack(pady=10)
-
-# ---------------------------
-# BOTÓN ADMIN
-# ---------------------------
-def abrir_login():
-    login = ctk.CTkToplevel(app)
-    login.title("Ingreso Admin")
-    login.geometry("300x230")
-    login.resizable(False, False)
-
-    ctk.CTkLabel(login, text="Usuario:", font=FUENTE).pack(pady=5)
-    user_entry = ctk.CTkEntry(login, width=220)
-    user_entry.pack()
-
-    ctk.CTkLabel(login, text="Contraseña:", font=FUENTE).pack(pady=5)
-    pass_entry = ctk.CTkEntry(login, width=220, show="*")
-    pass_entry.pack()
-
-    errores = {"count": 0}
-
-    def vibrar():
-        try:
-            x, y = login.winfo_x(), login.winfo_y()
-            for _ in range(6):
-                login.geometry(f"+{x+5}+{y}")
-                login.update()
-                time.sleep(0.03)
-                login.geometry(f"+{x-5}+{y}")
-                login.update()
-                time.sleep(0.03)
-            login.geometry(f"+{x}+{y}")
-        except:
-            pass
-
-    def validar():
-        global modo_admin
-
-        usuario = user_entry.get()
-        clave = pass_entry.get()
-
-        if usuario == "Admin_ID" and clave == "admin123":
-            modo_admin = True
-            toast("Modo Admin Activado", "green")
-            login.destroy()
-        else:
-            errores["count"] += 1
-            toast("Credenciales incorrectas", "red")
-            vibrar()
-
-            if errores["count"] >= 3:
-                toast("Demasiados intentos. Espere...", "red")
-                login.after(3000, lambda: None)
-
-    ctk.CTkButton(login, text="Ingresar", command=validar, width=200).pack(pady=10)
-
-
-btn_admin = ctk.CTkButton(panel_superior, text="ADMIN", width=120, command=abrir_login)
-btn_admin.grid(row=0, column=0, padx=10)
-
-
-# ---------------------------
-# BOTÓN TEMA
-# ---------------------------
-def cambiar_tema():
-    global tema_actual
-    if tema_actual == "dark":
-        tema_actual = "light"
-        ctk.set_appearance_mode("light")
-    else:
-        tema_actual = "dark"
+        self.title("Login del Sistema")
+        self.geometry("400x320")
         ctk.set_appearance_mode("dark")
+        ctk.set_default_color_theme("blue")
 
+        frame = ctk.CTkFrame(self)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
 
-btn_tema = ctk.CTkButton(panel_superior, text="Tema", width=120, command=cambiar_tema)
-btn_tema.grid(row=0, column=1, padx=10)
+        title = ctk.CTkLabel(frame, text="Iniciar Sesión", font=("Segoe UI", 28, "bold"))
+        title.pack(pady=10)
 
+        self.user_entry = ctk.CTkEntry(frame, placeholder_text="Usuario")
+        self.user_entry.pack(pady=10, fill="x", padx=20)
 
-# ============================================================
-# SUBPANELES
-# ============================================================
-panel_tabs = ctk.CTkTabview(frame, width=820, height=420)
-panel_tabs.pack()
+        self.pass_entry = ctk.CTkEntry(frame, placeholder_text="Contraseña", show="*")
+        self.pass_entry.pack(pady=10, fill="x", padx=20)
 
-tab_log = panel_tabs.add("Terminal Hacker")
-tab_usuarios = panel_tabs.add("Usuarios")
-tab_sistema = panel_tabs.add("Sistema")
-tab_estadisticas = panel_tabs.add("Estadísticas")
+        login_btn = ctk.CTkButton(frame, text="Ingresar", command=self.check_login)
+        login_btn.pack(pady=15)
 
+        self.mode_switch = ctk.CTkSwitch(
+            frame,
+            text="Modo claro / oscuro",
+            command=self.change_mode
+        )
+        self.mode_switch.pack(pady=10)
+        
+        # Centrar ventana al iniciar
+        self.after(100, self.center_window)
 
-# ============================================================
-# TAB LOG — TERMINAL HACKER
-# ============================================================
-log_box = ctk.CTkTextbox(tab_log, width=780, height=380, font=("Consolas", 13))
-log_box.pack(padx=10, pady=10)
+    def center_window(self):
+        self.update_idletasks()
+        width = self.winfo_width()
+        height = self.winfo_height()
+        x = (self.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.winfo_screenheight() // 2) - (height // 2)
+        self.geometry(f'{width}x{height}+{x}+{y}')
 
+    def change_mode(self):
+        mode = "light" if ctk.get_appearance_mode() == "Dark" else "dark"
+        ctk.set_appearance_mode(mode)
 
-# ============================================================
-# ANIMACIÓN HACKER
-# ============================================================
-hacker_lines = [
-    "[CORE] Iniciando seguridad de kernel...",
-    "[AUTH] Checkeando la encriptacion de credenciales...",
-    "[DB] leyende user de la tabla...",
-    "[RFID] Esperando la Tarjeta o Tag...",
-    "[SYS] Arrancando watchdog ...",
-    "[NET] abriendo sistema de seguridad...",
-    "[LOG] Actualizando registro temporal...",
-    "[ACCESS] preparando...",
-    "[AI] cargando modelo predictor...",
-    "[SYS] IDLE",
-    "[RFID] lector de tarjetas activo...",
-    "[SYS] Heatbeat OK",
-    "[WATCH] Sistema integral OK",
-    "[FIREWALL] Actualizacion de reglas",
-    "[SYS] Cache refrescado",
-    "[SESSION] Validando token...",
-    "[ENC] AES-256 Iniciado",
-    "[KERNEL] sin detectar anomalias",
-    "[DB] Handshake correcto",
-    "[SYS] Listo..."
-]
+    def check_login(self):
+        user = self.user_entry.get()
+        pw = self.pass_entry.get()
 
-def animacion_hacker():
-    while animacion_activa:
-        linea = random.choice(hacker_lines)
-        velocidad = random.uniform(0.003, 0.009)
-
-        for ch in linea:
+        # --- FIX: GESTIÓN DE VENTANAS ---
+        # No destruimos la ventana de login, solo la ocultamos.
+        # Las otras ventanas se abren como Toplevel (ventanas secundarias).
+        
+        self.withdraw()  # Ocultar ventana de login
+        
+        if user == ADMIN_USER and pw == ADMIN_PASS:
             try:
-                log_box.insert("end", ch)
-                log_box.update()
-                time.sleep(velocidad)
-            except:
-                return
-
-        log_box.insert("end", "\n")
-        log_box.see("end")
-        time.sleep(random.uniform(0.1, 0.7))
-
-threading.Thread(target=animacion_hacker, daemon=True).start()
-
-
-# ============================================================
-# TAB USUARIOS — FORMULARIO
-# ============================================================
-frm_user = ctk.CTkFrame(tab_usuarios)
-frm_user.pack(pady=10)
-
-ctk.CTkLabel(frm_user, text="Nombre:", font=FUENTE).grid(row=0, column=0, padx=5, pady=5)
-entry_nombre = ctk.CTkEntry(frm_user, width=200)
-entry_nombre.grid(row=0, column=1)
-
-ctk.CTkLabel(frm_user, text="Apellido:", font=FUENTE).grid(row=1, column=0, padx=5, pady=5)
-entry_apellido = ctk.CTkEntry(frm_user, width=200)
-entry_apellido.grid(row=1, column=1)
-
-ctk.CTkLabel(frm_user, text="Rol:", font=FUENTE).grid(row=2, column=0, padx=5, pady=5)
-entry_rol = ctk.CTkEntry(frm_user, width=200)
-entry_rol.grid(row=2, column=1)
-
-ctk.CTkLabel(frm_user, text="RFID UID:", font=FUENTE).grid(row=3, column=0, padx=5, pady=5)
-entry_uid = ctk.CTkEntry(frm_user, width=200)
-entry_uid.grid(row=3, column=1)
-
-ctk.CTkLabel(frm_user, text="PIN:", font=FUENTE).grid(row=4, column=0, padx=5, pady=5)
-entry_pin = ctk.CTkEntry(frm_user, width=200, show="*")
-entry_pin.grid(row=4, column=1)
-
-def click_agregar_usuario():
-    if not modo_admin:
-        toast("Solo admin puede agregar usuarios", "red")
-        return
-
-    nombre = entry_nombre.get().strip()
-    apellido = entry_apellido.get().strip()
-    rol = entry_rol.get().strip()
-    uid = entry_uid.get().strip()
-    pin = entry_pin.get().strip()
-
-    if not (nombre and apellido and rol and uid and pin):
-        toast("Completa todos los campos", "red")
-        return
-
-    if existe_uid(uid):
-        toast("UID ya registrado", "red")
-        return
-
-    if agregar_usuario(nombre, apellido, rol, uid, pin):
-        toast("Usuario agregado", "green")
-    else:
-        toast("Error al agregar usuario", "red")
-
-btn_add_user = ctk.CTkButton(tab_usuarios, text="AGREGAR USUARIO", command=click_agregar_usuario)
-btn_add_user.pack(pady=10)
-
-# ============================================================
-# TAB USUARIOS — LISTA DE USUARIOS (CONSULTA)
-# ============================================================
-lista_usuarios_box = ctk.CTkTextbox(tab_usuarios, width=780, height=200, font=("Consolas", 12))
-lista_usuarios_box.pack(pady=10)
-
-def cargar_usuarios():
-    try:
-        db = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="root",
-            database="abrir_cerradura"
-        )
-        cursor = db.cursor()
-        cursor.execute("SELECT ID_usuarios, Nombre, Apellido, Rol, rfid_Uid FROM usuarios")
-        data = cursor.fetchall()
-
-        lista_usuarios_box.delete("1.0", "end")
-        lista_usuarios_box.insert("end", "ID | Nombre | Apellido | Rol | RFID\n")
-        lista_usuarios_box.insert("end", "-"*80 + "\n")
-
-        for user in data:
-            linea = f"{user[0]} | {user[1]} | {user[2]} | {user[3]} | {user[4]}\n"
-            lista_usuarios_box.insert("end", linea)
-
-        lista_usuarios_box.see("end")
-        cursor.close()
-        db.close()
-    except:
-        lista_usuarios_box.insert("end", "⚠ Error cargando usuarios.\n")
-
-btn_refrescar_users = ctk.CTkButton(tab_usuarios, text="REFRESCAR LISTA", command=cargar_usuarios)
-btn_refrescar_users.pack(pady=5)
+                admin_win = AdminWindow(self)
+                admin_win.grab_set()  # Hacer modal
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir la ventana de admin: {e}")
+                self.deiconify() # Mostrar login de nuevo si falla
+        else:
+            # Lógica original: cualquier otro login abre la vista de usuario
+            try:
+                user_win = UserWindow(self)
+                user_win.grab_set() # Hacer modal
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo abrir la ventana de usuario: {e}")
+                self.deiconify() # Mostrar login de nuevo si falla
 
 
-# ============================================================
-# TAB SISTEMA — ESTADOS
-# ============================================================
-frame_sys = ctk.CTkFrame(tab_sistema)
-frame_sys.pack(pady=10)
+# =======================
+#    PANEL ADMIN
+# =======================
 
-lbl_estado_serial = ctk.CTkLabel(frame_sys, text="Serial:", font=FUENTE)
-lbl_estado_serial.grid(row=0, column=0, padx=10, pady=5)
-lbl_serial_val = ctk.CTkLabel(frame_sys, text="Desconectado", text_color="red", font=FUENTE)
-lbl_serial_val.grid(row=0, column=1, padx=10, pady=5)
+class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
+    
+    # Acepta 'master' (la ventana de login) como argumento
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master # Guardar referencia a la ventana principal (Login)
 
-lbl_estado_db = ctk.CTkLabel(frame_sys, text="Base de Datos:", font=FUENTE)
-lbl_estado_db.grid(row=1, column=0, padx=10, pady=5)
-lbl_db_val = ctk.CTkLabel(frame_sys, text="Desconectado", text_color="red", font=FUENTE)
-lbl_db_val.grid(row=1, column=1, padx=10, pady=5)
+        self.title("Panel Administrador")
+        self.geometry("800x650") # <-- Aumenté un poco el alto para el nuevo form
 
-lbl_watchdog = ctk.CTkLabel(frame_sys, text="Watchdog:", font=FUENTE)
-lbl_watchdog.grid(row=2, column=0, padx=10, pady=5)
-lbl_watchdog_val = ctk.CTkLabel(frame_sys, text="Activo", text_color="green", font=FUENTE)
-lbl_watchdog_val.grid(row=2, column=1, padx=10, pady=5)
+        # FIX: Manejar el cierre de esta ventana
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
+        # Tabs
+        self.tab = ctk.CTkTabview(self, width=760, height=610)
+        self.tab.pack(padx=20, pady=20)
 
-def verificar_serial():
-    if arduino and arduino.is_open:
-        lbl_serial_val.configure(text="Conectado", text_color="green")
-    else:
-        lbl_serial_val.configure(text="Desconectado", text_color="red")
+        # pestañas
+        self.users_tab = self.tab.add("Usuarios")
+        self.log_tab = self.tab.add("Registros")
 
-    app.after(1000, verificar_serial)
+        self.build_users_tab()
+        self.build_logs_tab()
 
+    def on_close(self):
+        """Se ejecuta cuando se cierra la ventana de Admin."""
+        self.master.deiconify()  # <-- Vuelve a mostrar la ventana de login
+        self.destroy()           # <-- Destruye esta ventana Toplevel
 
-def verificar_db():
-    try:
-        db = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="root",
-            database="abrir_cerradura"
-        )
-        db.close()
-        lbl_db_val.configure(text="Conectada", text_color="green")
-    except:
-        lbl_db_val.configure(text="Desconectada", text_color="red")
+    def build_users_tab(self):
+        # --- Tabla (Scrollable Frame) ---
+        # Le damos un alto fijo para que el formulario quepa debajo
+        self.users_table = ctk.CTkScrollableFrame(self.users_tab, width=720, height=250)
+        self.users_table.pack(pady=10, fill="x", expand=False)
 
-    app.after(2000, verificar_db)
+        self.refresh_users_table()
 
+        # --- Formulario (con el nuevo estilo) ---
+        form_frame = ctk.CTkFrame(self.users_tab, corner_radius=15)
+        form_frame.pack(pady=10, padx=10, fill="x")
 
-# ============================================================
-# TAB ESTADÍSTICAS — ACCESOS
-# ============================================================
-frame_stats = ctk.CTkFrame(tab_estadisticas)
-frame_stats.pack(pady=10)
+        # --- Logo (Opcional: descomenta si tienes la imagen) ---
+        # try:
+        #     # Esta es la ruta de tu segundo script
+        #     logo_path = r"C:\Users\ALUMNO\Downloads\Purple Pink Black Fingerprint Padlock Cyber Security Logo.png"
+        #     logo_img_data = Image.open(logo_path)
+        #     logo_img = ctk.CTkImage(light_image=logo_img_data, size=(80, 80))
+        #     logo_label = ctk.CTkLabel(form_frame, image=logo_img, text="")
+        #     logo_label.pack(pady=(10, 0))
+        # except Exception as e:
+        #     print(f"No se pudo cargar el logo: {e}. Se omite.")
 
-txt_stats = ctk.CTkTextbox(tab_estadisticas, width=780, height=350, font=("Consolas", 12))
-txt_stats.pack(pady=10)
+        form_title = ctk.CTkLabel(form_frame, text="🔐 Agregar Nuevo Usuario", font=("Segoe UI", 20, "bold"))
+        form_title.pack(pady=(10, 15))
 
-def cargar_estadisticas():
-    try:
-        db = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="root",
-            database="abrir_cerradura"
-        )
-        cursor = db.cursor()
-        cursor.execute("SELECT Estado, COUNT(*) FROM registro_acesso GROUP BY Estado")
-        data = cursor.fetchall()
+        # Usar un grid para alinear labels y entries
+        grid_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
+        grid_frame.pack(pady=10, padx=20)
 
-        ok = 0
-        den = 0
+        # --- Campos ---
+        ctk.CTkLabel(grid_frame, text="Nombre:").grid(row=0, column=0, sticky="e", padx=5, pady=5)
+        self.in_nombre = ctk.CTkEntry(grid_frame, placeholder_text="Nombre", width=250)
+        self.in_nombre.grid(row=0, column=1, padx=5, pady=5)
+        
+        ctk.CTkLabel(grid_frame, text="Apellido:").grid(row=1, column=0, sticky="e", padx=5, pady=5)
+        self.in_apellido = ctk.CTkEntry(grid_frame, placeholder_text="Apellido", width=250)
+        self.in_apellido.grid(row=1, column=1, padx=5, pady=5)
 
-        for estado, cant in data:
-            if estado == "ACCESO_OK":
-                ok = cant
-            elif estado == "ACCESO_DENEGADO":
-                den = cant
+        ctk.CTkLabel(grid_frame, text="Rol:").grid(row=2, column=0, sticky="e", padx=5, pady=5)
+        self.in_rol = ctk.CTkEntry(grid_frame, placeholder_text="Rol (e.g., 'Empleado')", width=250)
+        self.in_rol.grid(row=2, column=1, padx=5, pady=5)
 
-        txt_stats.delete("1.0", "end")
-        txt_stats.insert("end", "📊 Estadísticas del Sistema\n")
-        txt_stats.insert("end", "-"*60 + "\n\n")
+        ctk.CTkLabel(grid_frame, text="UID RFID:").grid(row=3, column=0, sticky="e", padx=5, pady=5)
+        self.in_uid = ctk.CTkEntry(grid_frame, placeholder_text="UID de la tarjeta/llavero", width=250)
+        self.in_uid.grid(row=3, column=1, padx=5, pady=5)
 
-        txt_stats.insert("end", f"Accesos permitidos: {ok}\n")
-        txt_stats.insert("end", f"Accesos denegados: {den}\n\n")
+        ctk.CTkLabel(grid_frame, text="PIN:").grid(row=4, column=0, sticky="e", padx=5, pady=5)
+        self.in_pin = ctk.CTkEntry(grid_frame, placeholder_text="PIN numérico", width=250, show="*")
+        self.in_pin.grid(row=4, column=1, padx=5, pady=5)
 
-        max_v = max(ok, den, 1)
-
-        txt_stats.insert("end", "Gráfico:\n")
-        txt_stats.insert("end", f"OK   | {'█' * int((ok/max_v)*40)} {ok}\n")
-        txt_stats.insert("end", f"DEN  | {'█' * int((den/max_v)*40)} {den}\n")
-
-        cursor.close()
-        db.close()
-
-    except:
-        txt_stats.insert("end", "⚠ Error al cargar estadísticas.\n")
+        # --- Botón ---
+        add_btn = ctk.CTkButton(form_frame, text="Agregar Usuario", command=self.add_user)
+        add_btn.pack(pady=(10, 20))
 
 
-btn_stats = ctk.CTkButton(tab_estadisticas, text="ACTUALIZAR", command=cargar_estadisticas)
-btn_stats.place(x=350, y=10)
+    def refresh_users_table(self):
+        for w in self.users_table.winfo_children():
+            w.destroy()
 
-
-# ============================================================
-# LECTURA SERIAL — ARDUINO
-# ============================================================
-def leer_serial():
-    if arduino and arduino.in_waiting > 0:
         try:
-            msg = arduino.readline().decode(errors="ignore").strip()
-        except:
-            msg = ""
+            users = obtener_todos_usuarios()
+        except Exception as e:
+            ctk.CTkLabel(self.users_table, text=f"Error al cargar usuarios: {e}", text_color="red").pack()
+            return
 
-        if msg:
-            ahora = datetime.now().strftime("%H:%M:%S")
-            log_box.insert("end", f"[ARDUINO {ahora}] {msg}\n")
-            log_box.see("end")
+        # Encabezados
+        headers = ["ID", "Nombre", "Apellido", "Rol", "UID", "Acción"]
+        header_row = ctk.CTkFrame(self.users_table)
+        header_row.pack(fill="x", padx=5)
 
-            if msg in ["ACCESO_OK", "ACCESO_DENEGADO"]:
-                registrar_acceso(1, msg)
+        widths = [50, 120, 120, 100, 150, 80] # Anchos de columna
+        for col, h in enumerate(headers):
+            ctk.CTkLabel(header_row, text=h, width=widths[col], font=("Segoe UI", 12, "bold")).grid(row=0, column=col, sticky="w")
+        
+        self.users_table.grid_columnconfigure(0, weight=0)
 
-    app.after(300, leer_serial)
+        # Filas
+        for u in users: # <-- 'u' AHORA ES UN DICCIONARIO
+            row_frame = ctk.CTkFrame(self.users_table)
+            row_frame.pack(fill="x", pady=2, padx=5)
 
+            # --- CAMBIO ---
+            # Extraemos los datos del diccionario 'u'
+            # Los nombres (ej: 'ID_usuarios') deben coincidir con los de tu BBDD
+            user_id = u.get('ID_usuarios', 'N/A')
+            nombre = u.get('Nombre', 'N/A')
+            apellido = u.get('Apellido', 'N/A')
+            rol = u.get('Rol', 'N/A')
+            uid_rfid = u.get('rfid_Uid', 'N/A') # Nombre de columna de tu BBDD
 
-# ============================================================
-# PING SERIAL
-# ============================================================
-def ping_serial():
-    if arduino and arduino.is_open:
+            datos_fila = [user_id, nombre, apellido, rol, uid_rfid]
+
+            # Llenamos la fila
+            for col, val in enumerate(datos_fila): 
+                ctk.CTkLabel(row_frame, text=str(val), width=widths[col], anchor="w").grid(row=0, column=col, sticky="w")
+
+            del_btn = ctk.CTkButton(
+                row_frame, text="Eliminar",
+                width=widths[5],
+                fg_color="#D00000", hover_color="#800000",
+                # --- CAMBIO ---
+                # Pasamos el 'user_id' correcto a la función lambda
+                command=lambda current_id=user_id: self.delete_user(current_id)
+            )
+            del_btn.grid(row=0, column=5, padx=5)
+
+    def add_user(self):
+        nombre = self.in_nombre.get()
+        apellido = self.in_apellido.get()
+        rol = self.in_rol.get()
+        uid = self.in_uid.get()
+        pin = self.in_pin.get()
+        
+        if not all([nombre, apellido, rol, uid, pin]):
+            messagebox.showwarning("Campos incompletos", "Por favor, complete todos los campos.")
+            return
+            
         try:
-            arduino.write(b"PING\n")
-        except:
-            pass
-    app.after(5000, ping_serial)
+            # Los nombres de los parámetros (uid, pin) coinciden con los de agregar_usuario
+            agregar_usuario(nombre, apellido, rol, uid, pin) 
+            messagebox.showinfo("Éxito", "Usuario agregado correctamente.")
+            self.refresh_users_table()
+            # Limpiar campos
+            self.in_nombre.delete(0, "end")
+            self.in_apellido.delete(0, "end")
+            self.in_rol.delete(0, "end")
+            self.in_uid.delete(0, "end")
+            self.in_pin.delete(0, "end")
+        except Exception as e:
+            messagebox.showerror("Error", f"No se pudo agregar el usuario: {e}")
+
+    def delete_user(self, user_id):
+        if messagebox.askyesno("Confirmar", f"¿Está seguro que desea eliminar al usuario ID: {user_id}?"):
+            try:
+                eliminar_usuario(user_id)
+                messagebox.showinfo("Éxito", "Usuario eliminado.")
+                self.refresh_users_table()
+            except Exception as e:
+                messagebox.showerror("Error", f"No se pudo eliminar el usuario: {e}")
+
+    # -------------------- REGISTROS --------------------
+
+    def build_logs_tab(self):
+        self.logs_table = ctk.CTkScrollableFrame(self.log_tab, width=720, height=520)
+        self.logs_table.pack(pady=10)
+        self.refresh_logs()
+
+    def refresh_logs(self):
+        for w in self.logs_table.winfo_children():
+            w.destroy()
+
+        try:
+            logs = obtener_registros()
+        except Exception as e:
+            ctk.CTkLabel(self.logs_table, text=f"Error al cargar registros: {e}", text_color="red").pack()
+            return
+
+        # --- CAMBIO ---
+        # Headers actualizados a los 4 campos que pediste
+        headers = ["ID Usuario", "Nombre", "Rol", "Fecha y Hora"]
+        header_row = ctk.CTkFrame(self.logs_table)
+        header_row.pack(fill="x", padx=5)
+
+        # --- CAMBIO ---
+        # Ajustamos los anchos para 4 columnas
+        widths = [100, 160, 160, 190] # Anchos ajustados
+        for col, h in enumerate(headers):
+            ctk.CTkLabel(header_row, text=h, width=widths[col], font=("Segoe UI", 12, "bold"), anchor="w").grid(row=0, column=col)
+
+        for r in logs: # <-- 'r' AHORA ES UN DICCIONARIO
+            row = ctk.CTkFrame(self.logs_table)
+            row.pack(fill="x", pady=2, padx=5)
+
+            # --- CAMBIO ---
+            # Extraemos solo los datos que pediste
+            user_id = r.get('ID_usuarios', 'N/A')
+            nombre = r.get('Nombre', '---')
+            rol = r.get('Rol', '---') # <-- Nuevo campo
+            fecha = r.get('Fecha_Formateada', 'N/A') # <-- Nuevo campo (ya formateado)
+            
+            # Asegurarse que la fecha sea un string para mostrarla
+            if not isinstance(fecha, str):
+                fecha = str(fecha)
+
+            # --- CAMBIO ---
+            # Agregamos los 4 campos a la fila
+            datos_fila = [user_id, nombre, rol, fecha]
+
+            for col, val in enumerate(datos_fila):
+                ctk.CTkLabel(row, text=str(val), width=widths[col], anchor="w").grid(row=0, column=col)
 
 
-# ============================================================
-# LIMPIAR LOG
-# ============================================================
-def limpiar_log():
-    log_box.delete("1.0", "end")
+# =======================
+# PANEL USUARIO
+# =======================
 
-btn_limpiar_log = ctk.CTkButton(tab_log, text="LIMPIAR LOG", command=limpiar_log)
-btn_limpiar_log.pack(pady=5)
+class UserWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
+    
+    def __init__(self, master):
+        super().__init__(master)
+        self.master = master
+
+        self.title("Registros de Acceso")
+        self.geometry("700x450")
+        
+        # FIX: Manejar el cierre de esta ventana
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+        frame = ctk.CTkFrame(self)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+        self.table = ctk.CTkScrollableFrame(frame)
+        self.table.pack(fill="both", expand=True)
+
+        self.load_data()
+
+    def on_close(self):
+        """Se ejecuta cuando se cierra la ventana de Usuario."""
+        self.master.deiconify() # <-- Vuelve a mostrar la ventana de login
+        self.destroy()          # <-- Destruye esta ventana Toplevel
+
+    def load_data(self):
+        for w in self.table.winfo_children():
+            w.destroy()
+
+        try:
+            registros = obtener_registros()
+        except Exception as e:
+            ctk.CTkLabel(self.table, text=f"Error al cargar registros: {e}", text_color="red").pack()
+            return
+            
+        # --- CAMBIO ---
+        # Actualizamos la vista de Usuario para que sea igual a la del Admin
+        headers = ["ID Usuario", "Nombre", "Rol", "Fecha y Hora"]
+        header = ctk.CTkFrame(self.table)
+        header.pack(fill="x", padx=5)
+        
+        # --- CAMBIO ---
+        widths = [100, 160, 160, 190] # Anchos ajustados
+        for col, h in enumerate(headers):
+            ctk.CTkLabel(header, text=h, width=widths[col], font=("Segoe UI", 12, "bold"), anchor="w").grid(row=0, column=col)
+
+        for r in registros: # <-- 'r' AHORA ES UN DICCIONARIO
+            row = ctk.CTkFrame(self.table)
+            row.pack(fill="x", pady=2, padx=5)
+
+            # --- CAMBIO ---
+            # Extraemos solo los datos que pediste
+            user_id = r.get('ID_usuarios', 'N/A')
+            nombre = r.get('Nombre', '---')
+            rol = r.get('Rol', '---') # <-- Nuevo campo
+            fecha = r.get('Fecha_Formateada', 'N/A') # <-- Nuevo campo (ya formateado)
+            
+            if not isinstance(fecha, str):
+                fecha = str(fecha)
+
+            # --- CAMBIO ---
+            datos_fila = [user_id, nombre, rol, fecha]
+
+            for col, val in enumerate(datos_fila):
+                ctk.CTkLabel(row, text=str(val), width=widths[col], anchor="w").grid(row=0, column=col)
 
 
-# ============================================================
-# INICIO DE TAREAS
-# ============================================================
-mover_fondo()
-verificar_serial()
-verificar_db()
-leer_serial()
-ping_serial()
+# =======================
+#         MAIN
+# =======================
 
-# ============================================================
-# LOOP PRINCIPAL
-# ============================================================
-app.mainloop()
-
+if __name__ == "__main__":
+    app = LoginWindow()
+    app.mainloop() # <-- FIX: Solo se llama a mainloop UNA VEZ
