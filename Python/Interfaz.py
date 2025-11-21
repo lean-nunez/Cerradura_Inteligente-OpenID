@@ -1,14 +1,12 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from PIL import Image, ImageTk  # <--- Importado para el logo
-from conexion_usuarios import (
+
+from conexion import (
     obtener_todos_usuarios,
     agregar_usuario,
     eliminar_usuario,
-    # Se quita obtener_registros de aquí
-)
-from Conexion_registro_accesos import (
-    obtener_registros,
+    obtener_registros
 )
 
 ADMIN_USER = "Admin"
@@ -16,7 +14,7 @@ ADMIN_PASS = "Admin-id"
 
 
 # =======================
-#         LOGIN
+#   INICIO DE SESION
 # =======================
 
 class LoginWindow(ctk.CTk):
@@ -69,11 +67,11 @@ class LoginWindow(ctk.CTk):
         user = self.user_entry.get()
         pw = self.pass_entry.get()
 
-        # --- FIX: GESTIÓN DE VENTANAS ---
-        # No destruimos la ventana de login, solo la ocultamos.
-        # Las otras ventanas se abren como Toplevel (ventanas secundarias).
+        # ---GESTIÓN DE VENTANAS ---
+        # No destruimos la ventana, solo la ocultamos.
+        # Las otras ventanas se abren 
         
-        self.withdraw()  # Ocultar ventana de login
+        self.withdraw()  # Ocultar ventana 
         
         if user == ADMIN_USER and pw == ADMIN_PASS:
             try:
@@ -123,21 +121,21 @@ class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
     def on_close(self):
         """Se ejecuta cuando se cierra la ventana de Admin."""
         self.master.deiconify()  # <-- Vuelve a mostrar la ventana de login
-        self.destroy()           # <-- Destruye esta ventana Toplevel
+        self.destroy()          # <-- Destruye esta ventana Toplevel
 
     def build_users_tab(self):
         # --- Tabla (Scrollable Frame) ---
-        # Le damos un alto fijo para que el formulario quepa debajo
+
         self.users_table = ctk.CTkScrollableFrame(self.users_tab, width=720, height=250)
         self.users_table.pack(pady=10, fill="x", expand=False)
 
         self.refresh_users_table()
 
-        # --- Formulario (con el nuevo estilo) ---
+        # --- Formulario ---
         form_frame = ctk.CTkFrame(self.users_tab, corner_radius=15)
         form_frame.pack(pady=10, padx=10, fill="x")
 
-        # --- Logo (Opcional: descomenta si tienes la imagen) ---
+        # --- Logo ---
         # try:
         #     # Esta es la ruta de tu segundo script
         #     logo_path = r"C:\Users\ALUMNO\Downloads\Purple Pink Black Fingerprint Padlock Cyber Security Logo.png"
@@ -203,13 +201,12 @@ class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
         self.users_table.grid_columnconfigure(0, weight=0)
 
         # Filas
-        for u in users: # <-- 'u' AHORA ES UN DICCIONARIO
+        for u in users: # <-- 'u'
             row_frame = ctk.CTkFrame(self.users_table)
             row_frame.pack(fill="x", pady=2, padx=5)
 
             # --- CAMBIO ---
             # Extraemos los datos del diccionario 'u'
-            # Los nombres (ej: 'ID_usuarios') deben coincidir con los de tu BBDD
             user_id = u.get('ID_usuarios', 'N/A')
             nombre = u.get('Nombre', 'N/A')
             apellido = u.get('Apellido', 'N/A')
@@ -226,7 +223,7 @@ class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
                 row_frame, text="Eliminar",
                 width=widths[5],
                 fg_color="#D00000", hover_color="#800000",
-                # --- CAMBIO ---
+            
                 # Pasamos el 'user_id' correcto a la función lambda
                 command=lambda current_id=user_id: self.delete_user(current_id)
             )
@@ -246,7 +243,7 @@ class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
         try:
             # Los nombres de los parámetros (uid, pin) coinciden con los de agregar_usuario
             agregar_usuario(nombre, apellido, rol, uid, pin) 
-            messagebox.showinfo("Éxito", "Usuario agregado correctamente.")
+            messagebox.showinfo("Éxito", "El Usuario fue agregado correctamente.")
             self.refresh_users_table()
             # Limpiar campos
             self.in_nombre.delete(0, "end")
@@ -258,7 +255,7 @@ class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
             messagebox.showerror("Error", f"No se pudo agregar el usuario: {e}")
 
     def delete_user(self, user_id):
-        if messagebox.askyesno("Confirmar", f"¿Está seguro que desea eliminar al usuario ID: {user_id}?"):
+        if messagebox.askyesno("Confirmar", f"¿Está seguro que desea Sacar al usuario ID: {user_id}?"):
             try:
                 eliminar_usuario(user_id)
                 messagebox.showinfo("Éxito", "Usuario eliminado.")
@@ -284,7 +281,6 @@ class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
             return
 
         # --- CAMBIO ---
-        # Headers actualizados a los 4 campos que pediste
         headers = ["ID Usuario", "Nombre", "Rol", "Fecha y Hora"]
         header_row = ctk.CTkFrame(self.logs_table)
         header_row.pack(fill="x", padx=5)
@@ -322,7 +318,7 @@ class AdminWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
 # PANEL USUARIO
 # =======================
 
-class UserWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
+class UserWindow(ctk.CTkToplevel): 
     
     def __init__(self, master):
         super().__init__(master)
@@ -331,7 +327,6 @@ class UserWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
         self.title("Registros de Acceso")
         self.geometry("700x450")
         
-        # FIX: Manejar el cierre de esta ventana
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         frame = ctk.CTkFrame(self)
@@ -357,13 +352,11 @@ class UserWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
             ctk.CTkLabel(self.table, text=f"Error al cargar registros: {e}", text_color="red").pack()
             return
             
-        # --- CAMBIO ---
-        # Actualizamos la vista de Usuario para que sea igual a la del Admin
+        # Actualiza la vista de Usuario para que sea igual a la del Admin
         headers = ["ID Usuario", "Nombre", "Rol", "Fecha y Hora"]
         header = ctk.CTkFrame(self.table)
         header.pack(fill="x", padx=5)
         
-        # --- CAMBIO ---
         widths = [100, 160, 160, 190] # Anchos ajustados
         for col, h in enumerate(headers):
             ctk.CTkLabel(header, text=h, width=widths[col], font=("Segoe UI", 12, "bold"), anchor="w").grid(row=0, column=col)
@@ -372,8 +365,7 @@ class UserWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
             row = ctk.CTkFrame(self.table)
             row.pack(fill="x", pady=2, padx=5)
 
-            # --- CAMBIO ---
-            # Extraemos solo los datos que pediste
+            # Extraemos solo los datos que se solicitan
             user_id = r.get('ID_usuarios', 'N/A')
             nombre = r.get('Nombre', '---')
             rol = r.get('Rol', '---') # <-- Nuevo campo
@@ -382,7 +374,6 @@ class UserWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
             if not isinstance(fecha, str):
                 fecha = str(fecha)
 
-            # --- CAMBIO ---
             datos_fila = [user_id, nombre, rol, fecha]
 
             for col, val in enumerate(datos_fila):
@@ -390,9 +381,9 @@ class UserWindow(ctk.CTkToplevel): # <-- FIX: Cambiado a CTkToplevel
 
 
 # =======================
-#         MAIN
+#        MAIN
 # =======================
 
 if __name__ == "__main__":
     app = LoginWindow()
-    app.mainloop() # <-- FIX: Solo se llama a mainloop UNA VEZ
+    app.mainloop()
