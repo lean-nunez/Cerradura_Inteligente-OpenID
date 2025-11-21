@@ -1,0 +1,59 @@
+{
+  "descargas": [
+    {
+      "nombre": "Arduino IDE",
+      "url": "https://www.arduino.cc/en/software",
+      "tipo": "programa"
+    },
+    {
+      "nombre": "Librería RTClib",
+      "url": "https://github.com/adafruit/RTClib",
+      "tipo": "librería Arduino"
+    },
+    {
+      "nombre": "Librería MFRC522",
+      "url": "https://github.com/miguelbalboa/rfid",
+      "tipo": "librería Arduino"
+    },
+    {
+      "nombre": "Librería LiquidCrystal_I2C",
+      "url": "https://github.com/johnrickman/LiquidCrystal_I2C",
+      "tipo": "librería Arduino"
+    },
+    {
+      "nombre": "Librería Servo",
+      "url": "Incluida en Arduino IDE",
+      "tipo": "librería Arduino"
+    },
+    {
+      "nombre": "Python 3.x",
+      "url": "https://www.python.org/downloads/",
+      "tipo": "programa"
+    },
+    {
+      "nombre": "Librería pyserial",
+      "url": "https://pypi.org/project/pyserial/",
+      "tipo": "Python"
+    },
+    {
+      "nombre": "Librería mysql-connector-python",
+      "url": "https://pypi.org/project/mysql-connector-python/",
+      "tipo": "Python"
+    },
+    {
+      "nombre": "Librería requests",
+      "url": "https://pypi.org/project/requests/",
+      "tipo": "Python"
+    },
+    {
+      "nombre": "Pillow",
+      "url": "https://pypi.org/project/Pillow/",
+      "tipo": "Python"
+    },
+    {
+      "nombre": "customtkinter",
+      "url": "https://pypi.org/project/customtkinter/",
+      "tipo": "Python"
+    }
+  ]
+}
